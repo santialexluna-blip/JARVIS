@@ -1,37 +1,66 @@
-# JARVIS v2.0
+# JARVIS v2.1.1
 
-Asistente personal modular en Python con núcleo conversacional, memoria persistente, sesiones, búsqueda web y herramientas explícitas.
+Asistente personal modular en Python con núcleo conversacional, memoria persistente, sesiones, búsqueda web y HUD/voz opcionales.
 
-## v2.0 incluye
-- Núcleo unificado `JarvisCore`.
-- Proveedor de IA intercambiable.
-- Memoria persistente local.
-- Memoria de conversación aislada por sesión.
-- Búsqueda web mediante HTTPS.
-- Herramientas modulares para funciones del sistema.
-- Integración Windows segura sin comandos arbitrarios.
+## Corrección v2.1.1
+- Se corrigieron los imports que impedían ejecutar el proyecto desde una instalación limpia.
+- Se añadió el paquete estable `jarvis/` para recuperar `python -m jarvis`.
+- El núcleo v2 usa imports consistentes con la estructura actual.
+- Las pruebas usan los módulos reales de la raíz.
 
-## Instalación
-Python 3.11+ recomendado.
+## Instalación en Windows
+Recomendado: Python 3.11 o superior.
 
-```bash
+```powershell
+cd JARVIS
 python -m venv .venv
-.venv\Scripts\activate
+.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
 pip install -r requirements.txt
+pip install pytest
+```
+
+Si PowerShell bloquea la activación del entorno, puedes ejecutar directamente:
+
+```powershell
+.venv\Scripts\python.exe -m pip install -r requirements.txt
+```
+
+## Ejecutar JARVIS
+
+```powershell
 python -m jarvis
 ```
 
-## Búsqueda
-Puedes usar:
+También puedes usar:
 
-```text
-busca noticias de tecnología
+```powershell
+python app.py
 ```
 
-La búsqueda solo recupera información; JARVIS no ejecuta código ni comandos obtenidos de Internet.
+## Comandos básicos
+- `ayuda`
+- `hora`
+- `sistema`
+- `recuerda <texto>`
+- `mis notas`
+- `busca <consulta>`
+- `salir`
+
+## HUD y voz
+La interfaz `hud.py` y la capa `voice.py` son opcionales. El núcleo funciona aunque no estén instaladas dependencias de voz.
+
+## Verificación
+Antes de usar nuevas funciones, ejecuta:
+
+```powershell
+python -m pytest -q
+```
+
+El workflow de GitHub Actions también ejecuta las pruebas en cada push a `main` y en pull requests.
 
 ## Seguridad
-Las acciones del equipo deben pasar por herramientas explícitas y limitadas. No se habilita un intérprete de shell arbitrario para lenguaje natural.
+Las acciones del equipo pasan por herramientas explícitas. JARVIS no habilita un intérprete de shell arbitrario desde lenguaje natural y no ejecuta código obtenido de Internet.
 
 ## Estado
-v2.0 — núcleo unificado instalado. Las capas de voz avanzada, GUI/HUD y automatización ampliada quedan para las siguientes versiones.
+**v2.1.1 — corrección de estructura y ejecución.**
