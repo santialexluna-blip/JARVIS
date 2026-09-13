@@ -1,14 +1,14 @@
-from .basic import BasicTools
-from .core_v2 import JarvisCore
-from .registry import ToolRegistry
-from .session_memory import SessionMemory
-from .store import MemoryStore
-from .web_search import WebSearch
-from .ai import DemoProvider
+from basic import BasicTools
+from core_v2 import JarvisCore
+from registry import ToolRegistry
+from session_memory import SessionMemory
+from store import MemoryStore
+from web_search import WebSearch
+from ai import DemoProvider
 
 
 class Assistant:
-    """Punto de entrada de JARVIS v2.0."""
+    """Punto de entrada de JARVIS v2.1."""
 
     def __init__(self):
         self.memory = MemoryStore()
