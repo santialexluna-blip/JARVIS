@@ -1,13 +1,15 @@
-from .router import Router
-from .store import MemoryStore
 from .basic import BasicTools
+from .core_v2 import JarvisCore
 from .registry import ToolRegistry
-from .ai import DemoProvider
-from .web_search import WebSearch
 from .session_memory import SessionMemory
+from .store import MemoryStore
+from .web_search import WebSearch
+from .ai import DemoProvider
 
 
 class Assistant:
+    """Punto de entrada de JARVIS v2.0."""
+
     def __init__(self):
         self.memory = MemoryStore()
         self.sessions = SessionMemory()
@@ -17,7 +19,13 @@ class Assistant:
         self.tools.register("system", "Consulta el estado del PC.", self.basic.system_info)
         self.web = WebSearch()
         self.ai = DemoProvider()
-        self.router = Router(self.tools, self.memory, self.ai, self.web, self.sessions)
+        self.core = JarvisCore(
+            ai=self.ai,
+            persistent_memory=self.memory,
+            tools=self.tools,
+            web_search=self.web,
+            sessions=self.sessions,
+        )
 
     def handle(self, text: str, session_id: str = "default") -> str:
-        return self.router.route(text, session_id=session_id)
+        return self.core.handle(text, session_id=session_id)
