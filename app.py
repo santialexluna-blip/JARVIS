@@ -1,8 +1,9 @@
 from .assistant import Assistant
 
+
 def run():
     assistant = Assistant()
-    print("JARVIS v1.1 — núcleo iniciado.")
+    print("JARVIS v2.0.1 — núcleo iniciado.")
     print("Escribe 'ayuda' para ver capacidades o 'salir' para terminar.")
     while True:
         try:
