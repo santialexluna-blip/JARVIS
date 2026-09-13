@@ -1,11 +1,11 @@
-"""Núcleo unificado de JARVIS v2.0.
+"""Núcleo unificado de JARVIS v2.1.
 
 Centraliza conversación, sesiones, memoria persistente y búsqueda web.
 Las acciones del sistema siguen pasando por herramientas explícitas.
 """
 
-from .session_memory import SessionMemory
-from .web_search import WebSearch
+from session_memory import SessionMemory
+from web_search import WebSearch
 
 
 class JarvisCore:
@@ -61,7 +61,7 @@ class JarvisCore:
             return "No tengo notas guardadas." if not notes else "Tus notas: " + " | ".join(notes)
 
         messages = [
-            {"role": "system", "content": "Eres JARVIS v2.0, un asistente personal útil, claro y seguro."}
+            {"role": "system", "content": "Eres JARVIS v2.1, un asistente personal útil, claro y seguro."}
         ]
         messages.extend(self.sessions.context(session_id, limit=10))
         messages.append({"role": "user", "content": text})
