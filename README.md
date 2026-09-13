@@ -1,15 +1,14 @@
-# JARVIS v1.1
+# JARVIS v1.3
 
-Asistente personal modular en Python.
+Asistente personal modular en Python, evolucionando desde el núcleo v1.1 hacia integración segura con Windows.
 
-## v1.1 incluye
-- Núcleo conversacional desacoplado del proveedor de IA.
-- Memoria local persistente con contexto reciente.
-- Registro modular de herramientas.
-- Herramientas básicas: hora y estado del sistema.
-- Proveedor IA intercambiable (modo demo incluido).
-- Configuración preparada mediante variables de entorno.
-- Base preparada para voz, wake word, web y automatización de Windows.
+## Incluye
+- Núcleo conversacional modular.
+- Memoria local persistente y contexto reciente.
+- Registro de herramientas.
+- Proveedor IA intercambiable en modo demo.
+- Herramientas básicas de hora y estado del sistema.
+- **v1.3: herramientas explícitas para Windows**, sin ejecución arbitraria.
 
 ## Instalación
 Python 3.11+ recomendado.
@@ -21,7 +20,14 @@ pip install -r requirements.txt
 python -m jarvis
 ```
 
-Si no se configura un proveedor de IA, JARVIS funciona en modo demo para probar el núcleo y la memoria.
+## v1.3 Windows
+El módulo `v1.3/windows_tools.py` permite, de forma controlada:
+- comprobar el sistema operativo;
+- abrir Notepad;
+- abrir Calculadora;
+- abrir carpetas existentes.
 
-## Seguridad
-JARVIS no ejecuta comandos arbitrarios del sistema en esta versión. Las acciones sensibles deberán pasar por herramientas explícitas y controles de confirmación.
+No se ejecutan comandos arbitrarios, PowerShell libre ni cadenas de shell proporcionadas por el usuario.
+
+## Próximas capas
+v1.4 búsqueda web, v1.5 memoria avanzada y v2.x interfaz/automatización ampliada.
