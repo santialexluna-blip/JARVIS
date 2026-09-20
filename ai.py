@@ -51,6 +51,8 @@ class DemoProvider(AIProvider):
 
     @classmethod
     def _calculate(cls, expression):
+        expression = expression.strip()
+
         def evaluate(node):
             if isinstance(node, ast.Expression):
                 return evaluate(node.body)

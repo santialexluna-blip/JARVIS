@@ -26,5 +26,9 @@ def test_calculates_mixed_spoken_and_numeric_values():
     assert answer("¿Cuánto es 204 más ochenta y cinco?") == "El resultado es 289."
 
 
+def test_calculates_transcription_with_polite_prefix_and_symbols():
+    assert answer("dime Cuánto es 200 + 80") == "El resultado es 280."
+
+
 def test_unknown_answer_does_not_hallucinate():
     assert "no conozco" in answer("¿Quién ganará mañana?")
