@@ -1,5 +1,5 @@
 @echo off
-setlocal
+setlocal EnableExtensions EnableDelayedExpansion
 cd /d "%~dp0"
 title JARVIS
 
@@ -46,9 +46,9 @@ if not exist ".venv\.jarvis-ai-v2.4" (
   )
 
   echo Descargando el modelo local Qwen3 4B. Esto solo ocurre una vez...
-  start "" /min "%OLLAMA_EXE%" serve
+  start "" /min "!OLLAMA_EXE!" serve
   timeout /t 3 /nobreak >nul
-  "%OLLAMA_EXE%" pull qwen3:4b
+  "!OLLAMA_EXE!" pull qwen3:4b
   if errorlevel 1 goto model_error
   type nul > ".venv\.jarvis-ai-v2.4"
 )
