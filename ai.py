@@ -5,6 +5,10 @@ import operator
 import re
 import unicodedata
 import json
+import os
+import shutil
+import subprocess
+import time
 from urllib.error import URLError
 from urllib.request import Request, urlopen
 
@@ -22,6 +26,8 @@ class OllamaProvider(AIProvider):
         self.endpoint = endpoint
 
     def reply(self, messages):
+        if not self.ensure_available():
+            raise RuntimeError("La IA local no está disponible.")
         system = {
             "role": "system",
             "content": (
@@ -64,6 +70,41 @@ class OllamaProvider(AIProvider):
                 return response.status == 200
         except (URLError, OSError, TimeoutError):
             return False
+
+    @staticmethod
+    def _find_ollama() -> str | None:
+        command = shutil.which("ollama")
+        if command:
+            return command
+        local_app_data = os.getenv("LOCALAPPDATA")
+        if local_app_data:
+            candidate = os.path.join(local_app_data, "Programs", "Ollama", "ollama.exe")
+            if os.path.isfile(candidate):
+                return candidate
+        return None
+
+    def ensure_available(self, wait_seconds: int = 20) -> bool:
+        if self.available():
+            return True
+        executable = self._find_ollama()
+        if not executable:
+            return False
+        creation_flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+        try:
+            subprocess.Popen(
+                [executable, "serve"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                creationflags=creation_flags,
+            )
+        except OSError:
+            return False
+        deadline = time.monotonic() + wait_seconds
+        while time.monotonic() < deadline:
+            if self.available():
+                return True
+            time.sleep(0.5)
+        return False
 
 
 class HybridProvider(AIProvider):

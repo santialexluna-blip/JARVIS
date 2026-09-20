@@ -56,7 +56,9 @@ if not exist ".venv\.jarvis-ai-v2.4" (
 set "OLLAMA_EXE=ollama"
 if exist "%LOCALAPPDATA%\Programs\Ollama\ollama.exe" set "OLLAMA_EXE=%LOCALAPPDATA%\Programs\Ollama\ollama.exe"
 start "" /min "%OLLAMA_EXE%" serve
-timeout /t 2 /nobreak >nul
+echo Verificando la conexion con la IA local...
+.venv\Scripts\python.exe -c "from ai import OllamaProvider; raise SystemExit(0 if OllamaProvider().ensure_available(30) else 1)"
+if errorlevel 1 goto connection_error
 
 echo.
 echo Iniciando la interfaz de JARVIS...
@@ -92,5 +94,12 @@ exit /b 1
 :model_error
 echo.
 echo No se pudo descargar el modelo local. Comprueba Internet y vuelve a abrir JARVIS.bat.
+pause
+exit /b 1
+
+:connection_error
+echo.
+echo Ollama esta instalado, pero JARVIS no pudo conectarse al servicio local.
+echo Cierra Ollama desde la bandeja de Windows, vuelve a abrirlo y ejecuta JARVIS.bat otra vez.
 pause
 exit /b 1
