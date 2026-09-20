@@ -50,6 +50,9 @@ python app.py
 ## HUD y voz
 La interfaz `hud.py` y la capa `voice.py` son opcionales. El núcleo funciona aunque no estén instaladas dependencias de voz.
 
+En Windows, ejecuta `run_voice_test.bat` para comprobar la salida de voz. JARVIS debe decir:
+"Hola, soy Jarvis. Mi sistema de voz funciona correctamente."
+
 ## Verificación
 Antes de usar nuevas funciones, ejecuta:
 
