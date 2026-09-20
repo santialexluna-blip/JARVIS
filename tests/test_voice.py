@@ -1,4 +1,5 @@
 from voice import VoiceEngine
+from unittest.mock import Mock
 
 
 def test_wake_word_is_required():
@@ -15,3 +16,15 @@ def test_wake_word_extracts_command():
 
 def test_wake_word_accepts_natural_punctuation():
     assert VoiceEngine.strip_wake_word("Jarvis, busca noticias") == "busca noticias"
+
+
+def test_speech_engine_is_released_after_each_phrase():
+    voice = VoiceEngine()
+    engine = Mock()
+    voice._tts = engine
+
+    assert voice.speak("primera respuesta") is True
+    engine.say.assert_called_once_with("primera respuesta")
+    engine.runAndWait.assert_called_once_with()
+    engine.stop.assert_called_once_with()
+    assert voice._tts is None

@@ -30,9 +30,20 @@ class VoiceEngine:
     def speak(self, text: str) -> bool:
         if self._tts is None and not self.setup_tts():
             return False
-        self._tts.say(text)
-        self._tts.runAndWait()
-        return True
+        try:
+            self._tts.say(text)
+            self._tts.runAndWait()
+            return True
+        except Exception:
+            return False
+        finally:
+            # SAPI5 puede dejar el motor bloqueado después de la primera frase.
+            # Liberarlo permite que cada respuesta use una sesión de voz limpia.
+            try:
+                self._tts.stop()
+            except Exception:
+                pass
+            self._tts = None
 
     def setup_recognition(self) -> bool:
         try:
