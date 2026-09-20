@@ -21,3 +21,4 @@ $env:PYTHONPATH = (Get-Location).Path
 Write-Host ''
 Write-Host 'JARVIS v2.1.1 instalado correctamente.' -ForegroundColor Green
 Write-Host 'Para iniciarlo: .\.venv\Scripts\python.exe -m jarvis' -ForegroundColor Cyan
+Write-Host 'Para probar la voz: ejecuta run_voice_test.bat' -ForegroundColor Cyan
