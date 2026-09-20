@@ -11,3 +11,7 @@ def test_wake_word_alone_activates():
 
 def test_wake_word_extracts_command():
     assert VoiceEngine.strip_wake_word("JARVIS busca noticias") == "busca noticias"
+
+
+def test_wake_word_accepts_natural_punctuation():
+    assert VoiceEngine.strip_wake_word("Jarvis, busca noticias") == "busca noticias"

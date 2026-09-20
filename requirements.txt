@@ -1,3 +1,4 @@
 python-dotenv>=1.0
 psutil>=6.0
 pyttsx3>=2.90
+SpeechRecognition[audio]>=3.14; platform_system == "Windows"
