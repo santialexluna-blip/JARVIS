@@ -22,6 +22,25 @@ class DemoProvider(AIProvider):
         ast.USub: operator.neg,
         ast.UAdd: operator.pos,
     }
+    _spanish_units = {
+        "cero": 0, "un": 1, "uno": 1, "una": 1, "dos": 2, "tres": 3,
+        "cuatro": 4, "cinco": 5, "seis": 6, "siete": 7, "ocho": 8,
+        "nueve": 9, "diez": 10, "once": 11, "doce": 12, "trece": 13,
+        "catorce": 14, "quince": 15, "dieciseis": 16, "diecisiete": 17,
+        "dieciocho": 18, "diecinueve": 19, "veinte": 20, "veintiuno": 21,
+        "veintidos": 22, "veintitres": 23, "veinticuatro": 24,
+        "veinticinco": 25, "veintiseis": 26, "veintisiete": 27,
+        "veintiocho": 28, "veintinueve": 29,
+    }
+    _spanish_tens = {
+        "treinta": 30, "cuarenta": 40, "cincuenta": 50, "sesenta": 60,
+        "setenta": 70, "ochenta": 80, "noventa": 90,
+    }
+    _spanish_hundreds = {
+        "cien": 100, "ciento": 100, "doscientos": 200, "trescientos": 300,
+        "cuatrocientos": 400, "quinientos": 500, "seiscientos": 600,
+        "setecientos": 700, "ochocientos": 800, "novecientos": 900,
+    }
 
     @staticmethod
     def _normalized(text):
@@ -47,6 +66,50 @@ class DemoProvider(AIProvider):
             raise ValueError("expresión demasiado larga")
         return evaluate(ast.parse(expression, mode="eval"))
 
+    @classmethod
+    def _spanish_number(cls, phrase):
+        phrase = phrase.strip()
+        if re.fullmatch(r"\d+(?:\.\d+)?", phrase):
+            return float(phrase) if "." in phrase else int(phrase)
+
+        total = 0
+        current = 0
+        found = False
+        for word in phrase.split():
+            if word == "y":
+                continue
+            if word in cls._spanish_units:
+                current += cls._spanish_units[word]
+                found = True
+            elif word in cls._spanish_tens:
+                current += cls._spanish_tens[word]
+                found = True
+            elif word in cls._spanish_hundreds:
+                current += cls._spanish_hundreds[word]
+                found = True
+            elif word == "mil":
+                total += (current or 1) * 1000
+                current = 0
+                found = True
+            else:
+                raise ValueError(f"número desconocido: {word}")
+        if not found:
+            raise ValueError("no hay un número")
+        return total + current
+
+    @classmethod
+    def _spoken_math_expression(cls, text):
+        text = text.replace("dividido entre", "entre")
+        pieces = re.split(r"\s+(mas|menos|por|entre)\s+", text)
+        if len(pieces) < 3 or len(pieces) % 2 == 0:
+            raise ValueError("no es una operación hablada")
+        operator_symbols = {"mas": "+", "menos": "-", "por": "*", "entre": "/"}
+        expression = [str(cls._spanish_number(pieces[0]))]
+        for index in range(1, len(pieces), 2):
+            expression.append(operator_symbols[pieces[index]])
+            expression.append(str(cls._spanish_number(pieces[index + 1])))
+        return " ".join(expression)
+
     def reply(self, messages):
         last = messages[-1]["content"] if messages else ""
         text = self._normalized(last)
@@ -69,8 +132,11 @@ class DemoProvider(AIProvider):
             if expression.startswith(prefix):
                 expression = expression[len(prefix):]
                 break
-        expression = expression.replace("por", "*").replace("entre", "/")
-        expression = re.sub(r"[^0-9+\-*/().% ]", "", expression)
+        try:
+            expression = self._spoken_math_expression(expression)
+        except ValueError:
+            expression = expression.replace("por", "*").replace("entre", "/")
+            expression = re.sub(r"[^0-9+\-*/().% ]", "", expression)
         if expression.strip() and re.fullmatch(r"[0-9+\-*/().% ]+", expression):
             try:
                 result = self._calculate(expression)

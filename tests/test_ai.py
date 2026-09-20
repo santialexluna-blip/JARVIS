@@ -17,5 +17,14 @@ def test_calculates_arithmetic_safely():
     assert answer("¿Cuánto es 204 + 85 + 150?") == "El resultado es 439."
 
 
+def test_calculates_numbers_spoken_in_spanish():
+    question = "¿Cuánto es doscientos cuatro más ochenta y cinco más ciento cincuenta?"
+    assert answer(question) == "El resultado es 439."
+
+
+def test_calculates_mixed_spoken_and_numeric_values():
+    assert answer("¿Cuánto es 204 más ochenta y cinco?") == "El resultado es 289."
+
+
 def test_unknown_answer_does_not_hallucinate():
     assert "no conozco" in answer("¿Quién ganará mañana?")
