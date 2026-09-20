@@ -16,7 +16,7 @@ if not exist ".venv\Scripts\python.exe" (
   python -m venv .venv
 )
 
-if not exist ".venv\.jarvis-voice-v2.2" (
+if not exist ".venv\.jarvis-desktop-v2.3" (
   echo Instalando y actualizando componentes...
   .venv\Scripts\python.exe -m pip install --upgrade pip
   if errorlevel 1 goto install_error
@@ -29,12 +29,12 @@ if not exist ".venv\.jarvis-voice-v2.2" (
   set PYTHONPATH=%~dp0
   .venv\Scripts\python.exe -m pytest -q
   if errorlevel 1 goto test_error
-  type nul > ".venv\.jarvis-voice-v2.2"
+  type nul > ".venv\.jarvis-desktop-v2.3"
 )
 
 echo.
-echo Iniciando JARVIS por voz...
-.venv\Scripts\python.exe voice_app.py
+echo Iniciando la interfaz de JARVIS...
+start "" .venv\Scripts\pythonw.exe jarvis_gui.py
 if errorlevel 1 goto runtime_error
 exit /b 0
 
@@ -52,6 +52,6 @@ exit /b 1
 
 :runtime_error
 echo.
-echo JARVIS no pudo usar el microfono. Revisa los permisos de Windows.
+echo JARVIS no pudo iniciar la interfaz. Revisa los permisos de Windows.
 pause
 exit /b 1

@@ -28,3 +28,9 @@ def test_speech_engine_is_released_after_each_phrase():
     engine.runAndWait.assert_called_once_with()
     engine.stop.assert_called_once_with()
     assert voice._tts is None
+
+
+def test_prefers_masculine_spanish_voice():
+    spanish = Mock(id="spanish-pablo", name="Microsoft Pablo", languages=["es-MX"])
+    english = Mock(id="english-zira", name="Microsoft Zira", languages=["en-US"])
+    assert VoiceEngine._best_voice_id([english, spanish]) == "spanish-pablo"

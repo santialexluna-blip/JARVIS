@@ -1,10 +1,10 @@
-# JARVIS v2.2
+# JARVIS v2.3
 
 Asistente personal modular en Python con conversación continua por voz, memoria persistente, sesiones, búsqueda web y HUD opcional.
 
 ## Inicio sencillo en Windows
 
-Abre únicamente `JARVIS.bat`. En el primer inicio prepara las dependencias y ejecuta las pruebas; después inicia directamente la conversación por voz.
+Abre únicamente `JARVIS.bat`. En el primer inicio prepara las dependencias y ejecuta las pruebas; después abre la interfaz de escritorio con conversación por voz, historial, entrada de texto, controles de micrófono y selector de voz.
 
 - Di `Jarvis` una vez para activar la conversación.
 - Continúa hablando sin repetir el nombre.
