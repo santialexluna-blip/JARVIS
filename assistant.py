@@ -4,7 +4,7 @@ from registry import ToolRegistry
 from session_memory import SessionMemory
 from store import MemoryStore
 from web_search import WebSearch
-from ai import DemoProvider
+from ai import HybridProvider
 
 
 class Assistant:
@@ -17,8 +17,9 @@ class Assistant:
         self.tools = ToolRegistry()
         self.tools.register("time", "Consulta la hora local.", self.basic.time)
         self.tools.register("system", "Consulta el estado del PC.", self.basic.system_info)
+        self.tools.register("date", "Consulta la fecha local.", self.basic.date)
         self.web = WebSearch()
-        self.ai = DemoProvider()
+        self.ai = HybridProvider()
         self.core = JarvisCore(
             ai=self.ai,
             persistent_memory=self.memory,

@@ -21,7 +21,7 @@ class JarvisCore:
         if not text:
             return "Necesito una instrucción."
 
-        lower = text.lower()
+        lower = text.lower().strip(" ¿?¡!.,")
         if lower in {"salir", "exit", "quit"}:
             return "__EXIT__"
         if lower in {"ayuda", "help"}:
@@ -32,6 +32,12 @@ class JarvisCore:
 
         if lower in {"hora", "qué hora es", "que hora es"}:
             return self.tools.call("time")
+        if lower in {
+            "fecha", "fecha de hoy", "qué fecha es", "que fecha es",
+            "qué día es", "que dia es", "qué día es hoy", "que dia es hoy",
+            "qué día soy", "que dia soy",
+        }:
+            return self.tools.call("date")
         if lower in {"sistema", "estado del sistema"}:
             return self.tools.call("system")
 
@@ -48,6 +54,21 @@ class JarvisCore:
                 snippet = f" — {result.snippet}" if result.snippet else ""
                 lines.append(f"{index}. {result.title}{snippet}\n{result.url}")
             return "\n".join(lines)
+
+        current_markers = (
+            "hoy", "actualmente", "últimas noticias", "ultimas noticias",
+            "noticias de", "precio de", "clima en", "quién es el presidente",
+            "quien es el presidente", "último resultado", "ultimo resultado",
+        )
+        if any(marker in lower for marker in current_markers):
+            try:
+                results = self.web.search(text, limit=3)
+            except Exception:
+                results = []
+            useful = [item for item in results if item.snippet]
+            if useful:
+                context = "\n".join(item.snippet for item in useful[:3])
+                text = f"Pregunta del usuario: {text}\nInformación web disponible: {context}"
 
         if lower.startswith("recuerda "):
             note = text[8:].strip()

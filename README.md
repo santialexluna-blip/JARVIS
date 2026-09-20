@@ -1,6 +1,10 @@
-# JARVIS v2.3
+# JARVIS v2.4
 
 Asistente personal modular en Python con conversación continua por voz, memoria persistente, sesiones, búsqueda web y HUD opcional.
+
+## Inteligencia local
+
+JARVIS usa `qwen3:4b` mediante Ollama para contestar preguntas generales y mantener conversaciones sin conexión después de la descarga inicial. Las consultas que dependen de información reciente pueden utilizar la búsqueda web cuando haya Internet.
 
 ## Inicio sencillo en Windows
 

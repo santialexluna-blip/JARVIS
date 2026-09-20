@@ -16,7 +16,7 @@ if not exist ".venv\Scripts\python.exe" (
   python -m venv .venv
 )
 
-if not exist ".venv\.jarvis-desktop-v2.3" (
+if not exist ".venv\.jarvis-ai-v2.4" (
   echo Instalando y actualizando componentes...
   .venv\Scripts\python.exe -m pip install --upgrade pip
   if errorlevel 1 goto install_error
@@ -29,8 +29,34 @@ if not exist ".venv\.jarvis-desktop-v2.3" (
   set PYTHONPATH=%~dp0
   .venv\Scripts\python.exe -m pytest -q
   if errorlevel 1 goto test_error
-  type nul > ".venv\.jarvis-desktop-v2.3"
+
+  echo Preparando la inteligencia artificial local...
+  set "OLLAMA_EXE=ollama"
+  where ollama >nul 2>&1
+  if errorlevel 1 (
+    if exist "%LOCALAPPDATA%\Programs\Ollama\ollama.exe" (
+      set "OLLAMA_EXE=%LOCALAPPDATA%\Programs\Ollama\ollama.exe"
+    ) else (
+      where winget >nul 2>&1
+      if errorlevel 1 goto ollama_error
+      winget install --exact --id Ollama.Ollama --accept-package-agreements --accept-source-agreements
+      if errorlevel 1 goto ollama_error
+      set "OLLAMA_EXE=%LOCALAPPDATA%\Programs\Ollama\ollama.exe"
+    )
+  )
+
+  echo Descargando el modelo local Qwen3 4B. Esto solo ocurre una vez...
+  start "" /min "%OLLAMA_EXE%" serve
+  timeout /t 3 /nobreak >nul
+  "%OLLAMA_EXE%" pull qwen3:4b
+  if errorlevel 1 goto model_error
+  type nul > ".venv\.jarvis-ai-v2.4"
 )
+
+set "OLLAMA_EXE=ollama"
+if exist "%LOCALAPPDATA%\Programs\Ollama\ollama.exe" set "OLLAMA_EXE=%LOCALAPPDATA%\Programs\Ollama\ollama.exe"
+start "" /min "%OLLAMA_EXE%" serve
+timeout /t 2 /nobreak >nul
 
 echo.
 echo Iniciando la interfaz de JARVIS...
@@ -53,5 +79,18 @@ exit /b 1
 :runtime_error
 echo.
 echo JARVIS no pudo iniciar la interfaz. Revisa los permisos de Windows.
+pause
+exit /b 1
+
+:ollama_error
+echo.
+echo No se pudo instalar Ollama automaticamente.
+echo Descargalo desde https://ollama.com/download/windows y vuelve a abrir JARVIS.bat.
+pause
+exit /b 1
+
+:model_error
+echo.
+echo No se pudo descargar el modelo local. Comprueba Internet y vuelve a abrir JARVIS.bat.
 pause
 exit /b 1

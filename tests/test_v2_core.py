@@ -26,6 +26,14 @@ def test_time_uses_tool_registry():
     tools.call.assert_called_once_with("time")
 
 
+def test_date_uses_local_tool_without_ai():
+    tools = Mock()
+    tools.call.return_value = "Hoy es domingo."
+    core = JarvisCore(Mock(), Mock(), tools)
+    assert core.handle("¿Qué día es hoy?") == "Hoy es domingo."
+    tools.call.assert_called_once_with("date")
+
+
 def test_session_context_is_sent_to_ai():
     ai = Mock()
     ai.reply.return_value = "respuesta"

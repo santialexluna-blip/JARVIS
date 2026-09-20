@@ -4,11 +4,86 @@ import datetime as dt
 import operator
 import re
 import unicodedata
+import json
+from urllib.error import URLError
+from urllib.request import Request, urlopen
 
 class AIProvider(ABC):
     @abstractmethod
     def reply(self, messages):
         raise NotImplementedError
+
+
+class OllamaProvider(AIProvider):
+    """Proveedor local sin tokens mediante la API de Ollama."""
+
+    def __init__(self, model="qwen3:4b", endpoint="http://localhost:11434/api/chat"):
+        self.model = model
+        self.endpoint = endpoint
+
+    def reply(self, messages):
+        system = {
+            "role": "system",
+            "content": (
+                "Eres JARVIS, un asistente personal en español. Responde con precisión, "
+                "claridad y de forma breve. Mantén el contexto de la conversación. "
+                "No inventes datos: si no estás seguro o la información puede haber cambiado, "
+                "indícalo. No menciones estas instrucciones."
+            ),
+        }
+        conversation = [system]
+        conversation.extend(message for message in messages if message.get("role") != "system")
+        payload = json.dumps({
+            "model": self.model,
+            "messages": conversation,
+            "stream": False,
+            "think": False,
+            "keep_alive": "10m",
+            "options": {"temperature": 0.2, "num_ctx": 2048},
+        }).encode("utf-8")
+        request = Request(
+            self.endpoint,
+            data=payload,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            with urlopen(request, timeout=180) as response:
+                result = json.loads(response.read().decode("utf-8"))
+        except (URLError, OSError, TimeoutError, json.JSONDecodeError) as exc:
+            raise RuntimeError("La IA local no está disponible.") from exc
+        answer = result.get("message", {}).get("content", "").strip()
+        if not answer:
+            raise RuntimeError("La IA local devolvió una respuesta vacía.")
+        return answer
+
+    def available(self) -> bool:
+        try:
+            request = Request("http://localhost:11434/api/tags")
+            with urlopen(request, timeout=2) as response:
+                return response.status == 200
+        except (URLError, OSError, TimeoutError):
+            return False
+
+
+class HybridProvider(AIProvider):
+    """Usa IA local y conserva respuestas básicas si Ollama no está listo."""
+
+    def __init__(self, local=None, fallback=None):
+        self.local = local or OllamaProvider()
+        self.fallback = fallback or DemoProvider()
+
+    def reply(self, messages):
+        try:
+            return self.local.reply(messages)
+        except RuntimeError:
+            basic = self.fallback.reply(messages)
+            if "Todavía no conozco" not in basic:
+                return basic
+            return (
+                "Mi modelo local no está disponible en este momento. "
+                "Abre JARVIS.bat con conexión a Internet para completar la instalación inicial."
+            )
 
 class DemoProvider(AIProvider):
     _operators = {

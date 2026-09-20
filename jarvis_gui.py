@@ -25,7 +25,7 @@ GREEN = "#57e6a5"
 class JarvisDesktop:
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("JARVIS v2.3")
+        self.root.title("JARVIS v2.4")
         self.root.geometry("920x680")
         self.root.minsize(760, 560)
         self.root.configure(bg=BG)
@@ -64,7 +64,7 @@ class JarvisDesktop:
         header = tk.Frame(self.root, bg=BG)
         header.pack(fill="x", padx=34, pady=(26, 12))
         tk.Label(header, text="JARVIS", bg=BG, fg=TEXT, font=("Segoe UI", 30, "bold")).pack(side="left")
-        tk.Label(header, text="  v2.3", bg=BG, fg=CYAN, font=("Segoe UI", 11, "bold")).pack(side="left", pady=(12, 0))
+        tk.Label(header, text="  v2.4 · IA LOCAL", bg=BG, fg=CYAN, font=("Segoe UI", 11, "bold")).pack(side="left", pady=(12, 0))
         tk.Label(header, textvariable=self.status, bg=BG, fg=GREEN, font=("Segoe UI", 11, "bold")).pack(side="right", pady=(12, 0))
 
         body = tk.Frame(self.root, bg=BG)
