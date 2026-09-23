@@ -12,12 +12,13 @@ class VoiceEngine:
     WAKE_WORDS = ("jarvis", "yarvis", "jervis", "harvis")
 
     def __init__(self, language: str = "es-MX", preferred_voice_id: str | None = None,
-                 profile: str = "spanish"):
+                 profile: str = "spanish", microphone_index: int | None = None):
         self.language = language
         self.preferred_voice_id = preferred_voice_id
         self.profile = profile
         self.rate = 165 if profile == "cinematic" else 175
         self.volume = .96 if profile == "cinematic" else 1.0
+        self.microphone_index = microphone_index
         self._recognizer = None
         self._tts = None
         self._tts_lock = threading.RLock()
@@ -118,6 +119,15 @@ class VoiceEngine:
             self._recognizer = None
             return False
 
+    @staticmethod
+    def list_microphones() -> list[str]:
+        """Devuelve los micrófonos que PyAudio puede abrir en Windows."""
+        try:
+            import speech_recognition as sr
+            return list(sr.Microphone.list_microphone_names())
+        except Exception:
+            return []
+
     def listen(self, timeout: int = 5, phrase_time_limit: int = 12) -> str | None:
         """Escucha una frase y la convierte a texto en español de México."""
         if self._recognizer is None and not self.setup_recognition():
@@ -126,7 +136,7 @@ class VoiceEngine:
         import speech_recognition as sr
 
         try:
-            with sr.Microphone() as source:
+            with sr.Microphone(device_index=self.microphone_index) as source:
                 if not self._calibrated:
                     self._recognizer.adjust_for_ambient_noise(source, duration=0.6)
                     self._calibrated = True
@@ -142,6 +152,11 @@ class VoiceEngine:
             return None
         except sr.RequestError as exc:
             raise RuntimeError("No pude conectar con el reconocimiento de voz.") from exc
+        except (OSError, AttributeError) as exc:
+            raise RuntimeError(
+                "Windows no me dio acceso al micrófono. Activa el permiso de micrófono "
+                "para aplicaciones de escritorio y vuelve a abrir JARVIS."
+            ) from exc
 
     @staticmethod
     def strip_wake_word(text: str) -> str | None:

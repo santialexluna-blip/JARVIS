@@ -12,6 +12,12 @@ la voz española automática o cualquier voz del sistema desde el botón **VOZ**
 JARVIS reconoce variantes habituales del dictado de su nombre, como “Yarvis”,
 para que la activación sea más confiable.
 
+Si el indicador muestra `LISTENING ERROR`, abre **VOZ** y pulsa **PROBAR
+MICRÓFONO**. La interfaz mostrará la frase detectada o indicará si Windows
+bloqueó el permiso. En Windows, el permiso se activa en **Configuración →
+Privacidad y seguridad → Micrófono → Permitir que las aplicaciones de
+escritorio accedan al micrófono**.
+
 ## Inteligencia local
 
 JARVIS usa `qwen3:4b` mediante Ollama para contestar preguntas generales y mantener conversaciones sin conexión después de la descarga inicial. Las consultas que dependen de información reciente pueden utilizar la búsqueda web cuando haya Internet.

@@ -44,3 +44,8 @@ def test_cinematic_profile_prefers_british_masculine_voice():
     english = type("Voice", (), {"name": "Microsoft George", "id": "en-gb-george", "languages": ["en-GB"]})()
     spanish = type("Voice", (), {"name": "Microsoft Pablo", "id": "spanish-pablo", "languages": ["es-MX"]})()
     assert VoiceEngine._best_voice_id([spanish, english], "cinematic") == "en-gb-george"
+
+
+def test_microphone_index_can_be_selected():
+    voice = VoiceEngine(microphone_index=2)
+    assert voice.microphone_index == 2

@@ -88,7 +88,10 @@ class JarvisDesktop:
         self.voice_box.bind("<<ComboboxSelected>>", self._change_voice)
         tk.Button(self.settings_frame, text="PROBAR VOZ", command=self._preview_voice,
                   bg=CYAN_DARK, fg=CYAN, activebackground=CYAN_SOFT, relief="flat",
-                  cursor="hand2").pack(fill="x", padx=15, pady=12, ipady=5)
+                  cursor="hand2").pack(fill="x", padx=15, pady=(12, 5), ipady=5)
+        tk.Button(self.settings_frame, text="PROBAR MICRÓFONO", command=self._test_microphone,
+                  bg=CYAN_DARK, fg=CYAN, activebackground=CYAN_SOFT, relief="flat",
+                  cursor="hand2").pack(fill="x", padx=15, pady=(0, 12), ipady=5)
         self.settings_window = self.hud.create_window(0, 0, window=self.settings_frame, state="hidden")
 
         self.mic_button = self._round_button("MIC", self.toggle_listening, 12)
@@ -143,7 +146,7 @@ class JarvisDesktop:
                          (self.settings_window, (200, height/2))):
             self.hud.coords(item, *xy)
         self.hud.itemconfigure(self.transcript_window, width=430, height=max(300, height-190))
-        self.hud.itemconfigure(self.settings_window, width=320, height=150)
+        self.hud.itemconfigure(self.settings_window, width=320, height=200)
 
     def _animate(self):
         if not self.root.winfo_exists():
@@ -194,6 +197,25 @@ class JarvisDesktop:
             self.listening = was_listening
         threading.Thread(target=preview, daemon=True).start()
 
+    def _test_microphone(self):
+        """Hace una prueba visible sin exigir la palabra de activación."""
+        if self.worker and self.worker.is_alive() and self.listening:
+            self._append("system", "El micrófono ya está activo. Di “Jarvis, qué hora es”.")
+            self.toggle_transcript()
+            return
+        self._set_status("PRUEBA", CYAN)
+        self._append("system", "Prueba iniciada: di una frase completa.")
+        def test():
+            try:
+                heard = self.voice.listen(timeout=6, phrase_time_limit=8)
+                if heard:
+                    self.events.put(("mic_test", heard))
+                else:
+                    self.events.put(("error", "No detecté una frase. Revisa el volumen de entrada de Windows."))
+            except RuntimeError as exc:
+                self.events.put(("error", str(exc)))
+        threading.Thread(target=test, daemon=True).start()
+
     def _set_status(self, text, color=CYAN):
         self.status.set(f"LISTENING  {text}")
         self.status_label.configure(fg=color)
@@ -231,6 +253,10 @@ class JarvisDesktop:
         welcome = "Sistema listo. Di Jarvis para activarme."
         self.events.put(("jarvis", welcome))
         self.voice.speak(welcome)
+        if not self.voice.list_microphones():
+            self.events.put(("error", "No encontré ningún micrófono. Conecta uno y revisa los permisos de Windows."))
+            return
+        self.events.put(("status", "ON"))
         while not self.stop_event.is_set() and self.conversation.running:
             if not self.listening:
                 time.sleep(.1)
@@ -238,6 +264,9 @@ class JarvisDesktop:
             try: heard = self.voice.listen(timeout=1, phrase_time_limit=12)
             except RuntimeError as exc:
                 self.events.put(("error", str(exc)))
+                return
+            except Exception as exc:
+                self.events.put(("error", f"El micrófono se detuvo: {exc}"))
                 return
             if heard:
                 self.events.put(("user", heard))
@@ -269,6 +298,12 @@ class JarvisDesktop:
                 elif event == "error":
                     self._append("system", payload)
                     self._set_status("ERROR", RED)
+                    self.hud.itemconfigure(self.transcript_window, state="normal")
+                elif event == "status": self._set_status(payload)
+                elif event == "mic_test":
+                    self._append("system", f"Micrófono correcto. Escuché: “{payload}”.")
+                    self.hud.itemconfigure(self.transcript_window, state="normal")
+                    self._set_status("ON")
                 elif event == "closed":
                     self.close()
                     return
