@@ -104,7 +104,7 @@ class JarvisDesktop:
         self.close_window = self.hud.create_window(0, 0, window=self.close_button)
         self.help_button = self._round_button("?", self.show_info)
         self.help_window = self.hud.create_window(0, 0, window=self.help_button)
-        self._append("system", "Sistema preparado. Di “Jarvis” para comenzar o escribe un mensaje.")
+        self._append("system", "Sistema preparado. Di “Friday” o aplaude para comenzar.")
 
     def _round_button(self, text, command, size=13):
         return tk.Button(self.root, text=text, command=command, bg=CYAN_DARK, fg=CYAN,
@@ -200,7 +200,7 @@ class JarvisDesktop:
     def _test_microphone(self):
         """Hace una prueba visible sin exigir la palabra de activación."""
         if self.worker and self.worker.is_alive() and self.listening:
-            self._append("system", "El micrófono ya está activo. Di “Jarvis, qué hora es”.")
+            self._append("system", "El micrófono ya está activo. Di “Friday, qué hora es”.")
             self.toggle_transcript()
             return
         self._set_status("PRUEBA", CYAN)
@@ -250,7 +250,7 @@ class JarvisDesktop:
         self._append("system", "MIC activa o pausa la escucha. REGISTRO muestra la conversación. VOZ cambia el perfil.")
 
     def _voice_loop(self):
-        welcome = "Sistema listo. Di Jarvis para activarme."
+        welcome = "Sistema listo. Di Friday o aplaude para activarme."
         self.events.put(("jarvis", welcome))
         self.voice.speak(welcome)
         if not self.voice.list_microphones():
@@ -273,7 +273,7 @@ class JarvisDesktop:
                 response = self.conversation.process_text(heard)
                 if response:
                     self.events.put(("jarvis", response))
-                    self.voice.speak(response)
+                    threading.Thread(target=self.voice.speak, args=(response,), daemon=True).start()
         self.events.put(("closed", None))
 
     def send_text(self):

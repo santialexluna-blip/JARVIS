@@ -7,19 +7,19 @@ def test_wake_word_is_required():
 
 
 def test_wake_word_alone_activates():
-    assert VoiceEngine.strip_wake_word("JARVIS") == ""
+    assert VoiceEngine.strip_wake_word("FRIDAY") == ""
 
 
 def test_wake_word_extracts_command():
-    assert VoiceEngine.strip_wake_word("JARVIS busca noticias") == "busca noticias"
+    assert VoiceEngine.strip_wake_word("FRIDAY busca noticias") == "busca noticias"
 
 
 def test_wake_word_accepts_natural_punctuation():
-    assert VoiceEngine.strip_wake_word("Jarvis, busca noticias") == "busca noticias"
+    assert VoiceEngine.strip_wake_word("Friday, busca noticias") == "busca noticias"
 
 
 def test_wake_word_accepts_common_transcription_variants():
-    assert VoiceEngine.strip_wake_word("Yarvis qué hora es") == "qué hora es"
+    assert VoiceEngine.strip_wake_word("Fraidei qué hora es") == "qué hora es"
 
 
 def test_speech_engine_is_released_after_each_phrase():
@@ -49,3 +49,9 @@ def test_cinematic_profile_prefers_british_masculine_voice():
 def test_microphone_index_can_be_selected():
     voice = VoiceEngine(microphone_index=2)
     assert voice.microphone_index == 2
+
+
+def test_detects_a_short_clap_peak():
+    quiet = (100).to_bytes(2, "little", signed=True) * 100
+    peak = (20000).to_bytes(2, "little", signed=True)
+    assert VoiceEngine._looks_like_clap(quiet + peak + quiet) is True

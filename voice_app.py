@@ -16,6 +16,15 @@ class VoiceConversation:
         self.voice.speak(message)
 
     def process_text(self, heard: str) -> str | None:
+        if heard == "__CLAP__":
+            self.active = True
+            return "Hola. Te escucho."
+
+        lowered_heard = heard.lower().strip(" ¿?¡!.,")
+        if lowered_heard in {"para", "párate", "silencio", "cállate", "callate", "detente"}:
+            self.voice.stop_speaking()
+            return None
+
         command = VoiceEngine.strip_wake_word(heard)
 
         if command is not None:
@@ -30,7 +39,7 @@ class VoiceConversation:
         lowered = command.lower().strip(" ¿?¡!.,")
         if lowered in {"duerme", "modo espera", "deja de escuchar"}:
             self.active = False
-            return "De acuerdo. Quedo en espera. Di Jarvis para activarme."
+            return "De acuerdo. Quedo en espera. Di Friday para activarme."
         if lowered in {"salir", "apagate", "apágate", "cerrar"}:
             self.running = False
             return "Hasta luego."
@@ -43,8 +52,8 @@ class VoiceConversation:
 
     def run(self) -> int:
         print("JARVIS v2.2 — conversación por voz")
-        print("Di 'Jarvis' para activarme. Di 'Jarvis, salir' para cerrar.")
-        self.respond("Sistema de voz listo. Di Jarvis para activarme.")
+        print("Di 'Friday' para activarme. Di 'Friday, salir' para cerrar.")
+        self.respond("Sistema de voz listo. Di Friday o aplaude para activarme.")
 
         while self.running:
             try:

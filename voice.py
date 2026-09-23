@@ -5,11 +5,12 @@ JARVIS sigue funcionando en modo texto.
 """
 
 import threading
+import audioop
 
 
 class VoiceEngine:
-    WAKE_WORD = "jarvis"
-    WAKE_WORDS = ("jarvis", "yarvis", "jervis", "harvis")
+    WAKE_WORD = "friday"
+    WAKE_WORDS = ("friday", "fridai", "fraidei", "frayday")
 
     def __init__(self, language: str = "es-MX", preferred_voice_id: str | None = None,
                  profile: str = "spanish", microphone_index: int | None = None):
@@ -22,6 +23,7 @@ class VoiceEngine:
         self._recognizer = None
         self._tts = None
         self._tts_lock = threading.RLock()
+        self._speaking = threading.Event()
         self._calibrated = False
 
     @property
@@ -94,12 +96,14 @@ class VoiceEngine:
             if self._tts is None and not self.setup_tts():
                 return False
             try:
+                self._speaking.set()
                 self._tts.say(text)
                 self._tts.runAndWait()
                 return True
             except Exception:
                 return False
             finally:
+                self._speaking.clear()
                 # SAPI5 puede dejar el motor bloqueado después de la primera frase.
                 # Liberarlo permite que cada respuesta use una sesión de voz limpia.
                 try:
@@ -107,6 +111,20 @@ class VoiceEngine:
                 except Exception:
                     pass
                 self._tts = None
+
+    @property
+    def speaking(self) -> bool:
+        return self._speaking.is_set()
+
+    def stop_speaking(self) -> None:
+        """Interrumpe la frase actual sin esperar a que termine."""
+        engine = self._tts
+        if engine is not None:
+            try:
+                engine.stop()
+            except Exception:
+                pass
+        self._speaking.clear()
 
     def setup_recognition(self) -> bool:
         try:
@@ -145,6 +163,9 @@ class VoiceEngine:
                     timeout=timeout,
                     phrase_time_limit=phrase_time_limit,
                 )
+            raw = audio.get_raw_data(convert_width=2)
+            if self._looks_like_clap(raw, 2):
+                return "__CLAP__"
             return self._recognizer.recognize_google(audio, language=self.language).strip()
         except sr.WaitTimeoutError:
             return None
@@ -157,6 +178,15 @@ class VoiceEngine:
                 "Windows no me dio acceso al micrófono. Activa el permiso de micrófono "
                 "para aplicaciones de escritorio y vuelve a abrir JARVIS."
             ) from exc
+
+    @staticmethod
+    def _looks_like_clap(raw_audio: bytes, sample_width: int = 2) -> bool:
+        """Detecta un pico breve y fuerte, típico de un aplauso."""
+        if not raw_audio:
+            return False
+        rms = audioop.rms(raw_audio, sample_width)
+        peak = audioop.max(raw_audio, sample_width)
+        return peak >= 12000 and rms >= 900 and peak >= rms * 2.4
 
     @staticmethod
     def strip_wake_word(text: str) -> str | None:
