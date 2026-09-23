@@ -1,6 +1,16 @@
-# JARVIS v2.4
+# JARVIS v2.5
 
 Asistente personal modular en Python con conversación continua por voz, memoria persistente, sesiones, búsqueda web y HUD opcional.
+
+## Interfaz HUD 2.5
+
+La interfaz incluye un núcleo circular animado, estado visible del micrófono,
+registro desplegable y selector de voz. El perfil `JARVIS cinematográfico` usa
+la mejor voz masculina británica instalada en Windows. También puedes elegir
+la voz española automática o cualquier voz del sistema desde el botón **VOZ**.
+
+JARVIS reconoce variantes habituales del dictado de su nombre, como “Yarvis”,
+para que la activación sea más confiable.
 
 ## Inteligencia local
 

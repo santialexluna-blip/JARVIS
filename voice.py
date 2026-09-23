@@ -9,12 +9,15 @@ import threading
 
 class VoiceEngine:
     WAKE_WORD = "jarvis"
+    WAKE_WORDS = ("jarvis", "yarvis", "jervis", "harvis")
 
-    def __init__(self, language: str = "es-MX", preferred_voice_id: str | None = None):
+    def __init__(self, language: str = "es-MX", preferred_voice_id: str | None = None,
+                 profile: str = "spanish"):
         self.language = language
         self.preferred_voice_id = preferred_voice_id
-        self.rate = 175
-        self.volume = 1.0
+        self.profile = profile
+        self.rate = 165 if profile == "cinematic" else 175
+        self.volume = .96 if profile == "cinematic" else 1.0
         self._recognizer = None
         self._tts = None
         self._tts_lock = threading.RLock()
@@ -28,7 +31,8 @@ class VoiceEngine:
         try:
             import pyttsx3
             self._tts = pyttsx3.init()
-            voice_id = self.preferred_voice_id or self._best_voice_id(self._tts.getProperty("voices"))
+            voices = self._tts.getProperty("voices")
+            voice_id = self.preferred_voice_id or self._best_voice_id(voices, self.profile)
             if voice_id:
                 self._tts.setProperty("voice", voice_id)
             self._tts.setProperty("rate", self.rate)
@@ -39,8 +43,8 @@ class VoiceEngine:
             return False
 
     @staticmethod
-    def _best_voice_id(voices) -> str | None:
-        """Prefiere una voz masculina en español disponible en Windows."""
+    def _best_voice_id(voices, profile: str = "spanish") -> str | None:
+        """Elige el mejor timbre instalado para el perfil solicitado."""
         ranked = []
         for voice in voices or []:
             name = str(getattr(voice, "name", "")).lower()
@@ -48,14 +52,27 @@ class VoiceEngine:
             languages = " ".join(map(str, getattr(voice, "languages", []) or [])).lower()
             searchable = f"{name} {voice_id.lower()} {languages}"
             score = 0
-            if any(token in searchable for token in ("spanish", "español", "es-mx", "es_es", "es-")):
-                score += 10
-            if any(token in searchable for token in ("pablo", "jorge", "david", "male", "mascul")):
-                score += 5
+            if profile == "cinematic":
+                if any(token in searchable for token in ("george", "ryan", "mark", "en-gb", "en_gb", "british")):
+                    score += 15
+                if any(token in searchable for token in ("male", "mascul")):
+                    score += 5
+            else:
+                if any(token in searchable for token in ("spanish", "español", "es-mx", "es_es", "es-")):
+                    score += 10
+                if any(token in searchable for token in ("pablo", "jorge", "david", "male", "mascul")):
+                    score += 5
             ranked.append((score, voice_id))
         if not ranked:
             return None
         return max(ranked, key=lambda item: item[0])[1]
+
+    def set_profile(self, profile: str, voice_id: str | None = None):
+        self.profile = profile
+        self.preferred_voice_id = voice_id
+        self.rate = 165 if profile == "cinematic" else 175
+        self.volume = .96 if profile == "cinematic" else 1.0
+        self._tts = None
 
     def list_voices(self) -> list[dict[str, str]]:
         try:
@@ -132,10 +149,11 @@ class VoiceEngine:
         if not normalized:
             return None
         lowered = normalized.lower()
-        if lowered == VoiceEngine.WAKE_WORD:
-            return ""
-        if lowered.startswith(VoiceEngine.WAKE_WORD):
-            remainder = normalized[len(VoiceEngine.WAKE_WORD):]
-            if remainder and (remainder[0].isspace() or remainder[0] in ",:;.-"):
-                return remainder.lstrip(" ,:;.-").strip()
+        for wake_word in VoiceEngine.WAKE_WORDS:
+            if lowered == wake_word:
+                return ""
+            if lowered.startswith(wake_word):
+                remainder = normalized[len(wake_word):]
+                if remainder and (remainder[0].isspace() or remainder[0] in ",:;.-"):
+                    return remainder.lstrip(" ,:;.-").strip()
         return None
