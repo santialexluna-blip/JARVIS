@@ -39,7 +39,7 @@ class VoiceConversation:
         lowered = command.lower().strip(" ¿?¡!.,")
         if lowered in {"duerme", "modo espera", "deja de escuchar"}:
             self.active = False
-            return "De acuerdo. Quedo en espera. Di Friday para activarme."
+            return "De acuerdo. Quedo en espera. Di Karen para activarme."
         if lowered in {"salir", "apagate", "apágate", "cerrar"}:
             self.running = False
             return "Hasta luego."
@@ -52,8 +52,8 @@ class VoiceConversation:
 
     def run(self) -> int:
         print("JARVIS v2.2 — conversación por voz")
-        print("Di 'Friday' para activarme. Di 'Friday, salir' para cerrar.")
-        self.respond("Sistema de voz listo. Di Friday o aplaude para activarme.")
+        print("Di 'Karen' para activarme. Di 'Karen, salir' para cerrar.")
+        self.respond("Sistema de voz listo. Di Karen o aplaude para activarme.")
 
         while self.running:
             try:

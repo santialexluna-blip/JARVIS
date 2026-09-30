@@ -9,8 +9,8 @@ import audioop
 
 
 class VoiceEngine:
-    WAKE_WORD = "friday"
-    WAKE_WORDS = ("friday", "fridai", "fraidei", "frayday")
+    WAKE_WORD = "karen"
+    WAKE_WORDS = ("karen", "caren", "car en")
 
     def __init__(self, language: str = "es-MX", preferred_voice_id: str | None = None,
                  profile: str = "spanish", microphone_index: int | None = None):

@@ -48,3 +48,15 @@ def test_session_context_is_sent_to_ai():
     assert messages[-1]["content"] == "¿cómo estás?"
     sessions.add_message.assert_any_call("demo", "user", "¿cómo estás?")
     sessions.add_message.assert_any_call("demo", "assistant", "respuesta")
+
+
+def test_persistent_memory_is_sent_to_ai():
+    ai = Mock()
+    ai.reply.return_value = "Lo recuerdo."
+    memory = Mock()
+    memory.context.return_value = ["Usuario: mi perro se llama Max"]
+    core = JarvisCore(ai, memory, Mock())
+
+    assert core.handle("¿Cómo se llama mi perro?") == "Lo recuerdo."
+    messages = ai.reply.call_args.args[0]
+    assert "mi perro se llama Max" in messages[0]["content"]

@@ -9,7 +9,7 @@ registro desplegable y selector de voz. El perfil `JARVIS cinematográfico` usa
 la mejor voz masculina británica instalada en Windows. También puedes elegir
 la voz española automática o cualquier voz del sistema desde el botón **VOZ**.
 
-La palabra de activación es **Friday**. Un aplauso también activa al asistente,
+La palabra de activación es **Karen**. Un aplauso también activa al asistente,
 que responderá con un saludo y quedará listo para recibir órdenes. Durante una
 respuesta puedes decir **para**, **silencio**, **cállate** o **detente**.
 
@@ -27,10 +27,10 @@ JARVIS usa `qwen3:4b` mediante Ollama para contestar preguntas generales y mante
 
 Abre únicamente `JARVIS.bat`. En el primer inicio prepara las dependencias y ejecuta las pruebas; después abre la interfaz de escritorio con conversación por voz, historial, entrada de texto, controles de micrófono y selector de voz.
 
-- Di `Friday` una vez, o aplaude, para activar la conversación.
+- Di `Karen` una vez, o aplaude, para activar la conversación.
 - Continúa hablando sin repetir el nombre.
-- Di `Friday, duerme` para volver al modo de espera.
-- Di `Friday, salir` para cerrar.
+- Di `Karen, duerme` para volver al modo de espera.
+- Di `Karen, salir` para cerrar.
 - No requiere tokens ni claves API.
 
 ## Corrección v2.1.1

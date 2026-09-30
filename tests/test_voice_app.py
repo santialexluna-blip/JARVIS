@@ -17,7 +17,7 @@ def test_ignores_speech_until_wake_word():
 
 def test_wake_word_starts_continuous_conversation():
     conversation, assistant = build_conversation()
-    assert conversation.process_text("Friday") == "Te escucho."
+    assert conversation.process_text("Karen") == "Te escucho."
     assert conversation.process_text("cómo estás") == "respuesta"
     assistant.handle.assert_called_once_with("cómo estás", session_id="voice")
 
@@ -37,12 +37,12 @@ def test_stop_command_interrupts_speech():
 
 def test_sleep_returns_to_standby():
     conversation, _ = build_conversation()
-    conversation.process_text("Friday")
+    conversation.process_text("Karen")
     assert "espera" in conversation.process_text("duerme")
     assert conversation.process_text("hola") is None
 
 
 def test_voice_exit_stops_loop():
     conversation, _ = build_conversation()
-    assert conversation.process_text("Friday salir") == "Hasta luego."
+    assert conversation.process_text("Karen salir") == "Hasta luego."
     assert conversation.running is False

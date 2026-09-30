@@ -81,9 +81,17 @@ class JarvisCore:
             notes = self.persistent_memory.list_all()
             return "No tengo notas guardadas." if not notes else "Tus notas: " + " | ".join(notes)
 
-        messages = [
-            {"role": "system", "content": "Eres JARVIS v2.1, un asistente personal útil, claro y seguro."}
-        ]
+        memories = self.persistent_memory.context(limit=16)
+        if not isinstance(memories, list):
+            memories = []
+        remembered = "\n".join(str(item) for item in memories if item)
+        system_content = (
+            "Eres JARVIS, un asistente personal útil, claro y seguro. "
+            "Usa el historial y la memoria para entender referencias como eso, lo anterior o ese tema."
+        )
+        if remembered:
+            system_content += f"\nMemoria reciente local:\n{remembered}"
+        messages = [{"role": "system", "content": system_content}]
         messages.extend(self.sessions.context(session_id, limit=10))
         messages.append({"role": "user", "content": text})
         answer = self.ai.reply(messages)

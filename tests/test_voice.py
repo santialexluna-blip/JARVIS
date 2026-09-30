@@ -7,19 +7,19 @@ def test_wake_word_is_required():
 
 
 def test_wake_word_alone_activates():
-    assert VoiceEngine.strip_wake_word("FRIDAY") == ""
+    assert VoiceEngine.strip_wake_word("KAREN") == ""
 
 
 def test_wake_word_extracts_command():
-    assert VoiceEngine.strip_wake_word("FRIDAY busca noticias") == "busca noticias"
+    assert VoiceEngine.strip_wake_word("KAREN busca noticias") == "busca noticias"
 
 
 def test_wake_word_accepts_natural_punctuation():
-    assert VoiceEngine.strip_wake_word("Friday, busca noticias") == "busca noticias"
+    assert VoiceEngine.strip_wake_word("Karen, busca noticias") == "busca noticias"
 
 
 def test_wake_word_accepts_common_transcription_variants():
-    assert VoiceEngine.strip_wake_word("Fraidei qué hora es") == "qué hora es"
+    assert VoiceEngine.strip_wake_word("Caren qué hora es") == "qué hora es"
 
 
 def test_speech_engine_is_released_after_each_phrase():
