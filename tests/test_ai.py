@@ -1,8 +1,15 @@
-from ai import DemoProvider
+from ai import DemoProvider, OllamaProvider
 
 
 def answer(text):
     return DemoProvider().reply([{"role": "user", "content": text}])
+
+
+def test_local_answers_are_limited_for_fast_voice_output():
+    long_answer = " ".join(f"palabra{i}" for i in range(80))
+    shortened = OllamaProvider._short_answer(long_answer)
+    assert len(shortened.split()) == 55
+    assert shortened.endswith(".")
 
 
 def test_answers_identity_question():

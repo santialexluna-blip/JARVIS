@@ -12,6 +12,8 @@ la voz española automática o cualquier voz del sistema desde el botón **VOZ**
 La palabra de activación es **Karen**. Un aplauso también activa al asistente,
 que responderá con un saludo y quedará listo para recibir órdenes. Durante una
 respuesta puedes decir **para**, **silencio**, **cállate** o **detente**.
+Las respuestas normales están limitadas a unas 55 palabras para reducir tanto
+el tiempo de espera como la duración de la voz.
 
 Si el indicador muestra `LISTENING ERROR`, abre **VOZ** y pulsa **PROBAR
 MICRÓFONO**. La interfaz mostrará la frase detectada o indicará si Windows
