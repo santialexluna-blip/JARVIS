@@ -15,6 +15,10 @@ respuesta puedes decir **para**, **silencio**, **cállate** o **detente**.
 Las respuestas normales están limitadas a unas 55 palabras para reducir tanto
 el tiempo de espera como la duración de la voz.
 
+El HUD distingue espera/escucha (cian), preparación de respuesta (ámbar),
+respuesta por voz (verde) y problemas (rojo). La tarjeta central muestra una
+vista breve de la última respuesta; el texto completo se conserva en REGISTRO.
+
 Si el indicador muestra `LISTENING ERROR`, abre **VOZ** y pulsa **PROBAR
 MICRÓFONO**. La interfaz mostrará la frase detectada o indicará si Windows
 bloqueó el permiso. En Windows, el permiso se activa en **Configuración →

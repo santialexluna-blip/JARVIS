@@ -15,6 +15,7 @@ from voice_app import VoiceConversation
 BG, PANEL = "#02090a", "#061719"
 CYAN, CYAN_SOFT, CYAN_DARK = "#31f4ee", "#137e82", "#08383d"
 TEXT, MUTED, RED = "#d7ffff", "#579398", "#ff6275"
+AMBER, GREEN = "#ffcf70", "#6bffc3"
 
 
 class JarvisDesktop:
@@ -29,6 +30,7 @@ class JarvisDesktop:
         self.events, self.stop_event = queue.Queue(), threading.Event()
         self.listening, self.worker, self.voice_ids = False, None, {}
         self.angle, self.pulse = 0, 0
+        self.phase = "starting"
         self.status = tk.StringVar(value="INICIANDO")
         self.voice_name = tk.StringVar(value="JARVIS cinematográfico")
         self._build_styles()
@@ -54,8 +56,18 @@ class JarvisDesktop:
         self.status_window = self.hud.create_window(28, 58, anchor="nw", window=self.status_label)
         self.title_window = self.hud.create_text(540, 20, text="J  A  R  V  I  S", fill=TEXT,
                                                  font=("Consolas", 15, "bold"))
-        self.version_window = self.hud.create_text(540, 44, text="HUD 2.5  ·  IA LOCAL", fill=MUTED,
+        self.version_window = self.hud.create_text(540, 44, text="KAREN  ·  VOZ Y MEMORIA LOCAL", fill=MUTED,
                                                    font=("Consolas", 8))
+        self.response_card = tk.Frame(self.root, bg=PANEL, highlightbackground=CYAN_DARK,
+                                      highlightthickness=1)
+        tk.Label(self.response_card, text="ÚLTIMA RESPUESTA", bg=PANEL, fg=CYAN,
+                 font=("Consolas", 8, "bold")).pack(anchor="w", padx=16, pady=(8, 2))
+        self.latest_response = tk.Label(self.response_card,
+                                        text="Di Karen o pulsa ACTIVAR para comenzar.",
+                                        bg=PANEL, fg=TEXT, font=("Segoe UI", 11),
+                                        anchor="w", justify="left", wraplength=650)
+        self.latest_response.pack(fill="both", expand=True, padx=16, pady=(0, 8))
+        self.response_window = self.hud.create_window(0, 0, window=self.response_card)
         self.info_button = self._round_button("i", self.show_info)
         self.info_window = self.hud.create_window(0, 0, window=self.info_button)
 
@@ -124,8 +136,8 @@ class JarvisDesktop:
         if width < 10 or height < 10:
             return
         self.hud.delete("hud-shape")
-        cx, cy = width / 2, height * .47
-        radius = min(width * .25, height * .31)
+        cx, cy = width / 2, height * .38
+        radius = min(width * .22, (height - 230) / 2.8)
         self.hud.create_line(20, 40, width-20, 40, fill=CYAN_DARK, tags="hud-shape")
         self.hud.create_line(0, height-92, width, height-92, fill=CYAN_DARK, width=2, tags="hud-shape")
         self.hud.create_rectangle(0, height-91, width, height, fill="#031113", outline="", tags="hud-shape")
@@ -145,21 +157,25 @@ class JarvisDesktop:
                          (self.status_window, (25, 54)), (self.info_window, (width-48, 70)),
                          (self.help_window, (width-48, height-128)), (self.mic_window, (width/2, height-50)),
                          (self.activate_window, (width/2-90, height-47)),
+                         (self.response_window, (width/2, height-150)),
                          (self.log_window, (width/2-210, height-47)), (self.voice_window, (width/2+180, height-47)),
                          (self.close_window, (width-100, height-47)), (self.transcript_window, (width-265, height/2)),
                          (self.settings_window, (200, height/2))):
             self.hud.coords(item, *xy)
         self.hud.itemconfigure(self.transcript_window, width=430, height=max(300, height-190))
         self.hud.itemconfigure(self.settings_window, width=320, height=200)
+        self.hud.itemconfigure(self.response_window, width=min(720, width-120), height=90)
+        self.latest_response.configure(wraplength=min(680, width-160))
 
     def _animate(self):
         if not self.root.winfo_exists():
             return
         width, height = self.hud.winfo_width(), self.hud.winfo_height()
-        cx, cy = width/2, height*.47
-        radius = min(width*.25, height*.31)
+        cx, cy = width/2, height*.38
+        radius = min(width*.22, (height-230)/2.8)
         self.hud.delete("animation")
-        color = CYAN if self.listening else CYAN_SOFT
+        color = {"thinking": AMBER, "speaking": GREEN, "error": RED}.get(
+            self.phase, CYAN if self.listening else CYAN_SOFT)
         for offset, extent, scale, line in ((0, 52, 1.18, 2), (120, 82, .96, 4), (240, 38, .70, 2)):
             r = radius*scale
             self.hud.create_arc(cx-r, cy-r, cx+r, cy+r, start=self.angle+offset,
@@ -167,12 +183,20 @@ class JarvisDesktop:
         pulse_r = radius*(.42+.025*math.sin(self.pulse))
         self.hud.create_oval(cx-pulse_r, cy-pulse_r, cx+pulse_r, cy+pulse_r,
                              outline=color, width=2, tags="animation")
-        self.hud.create_text(cx, cy+radius*.18, text="ESCUCHANDO" if self.listening else "EN PAUSA",
+        label = {"starting": "INICIANDO", "thinking": "PENSANDO",
+                 "speaking": "RESPONDIENDO", "error": "REVISAR MICRÓFONO",
+                 "test": "PROBANDO MICRÓFONO"}.get(self.phase)
+        if label is None:
+            label = ("ESCUCHANDO" if self.conversation.active else "EN ESPERA") if self.listening else "EN PAUSA"
+        self.hud.create_text(cx, cy+radius*.18, text=label,
                              fill=color, font=("Consolas", 10, "bold"), tags="animation")
         self.angle, self.pulse = (self.angle+(2.2 if self.listening else .6))%360, self.pulse+.18
         self.root.after(50, self._animate)
 
     def _append(self, role, message):
+        if role == "jarvis":
+            preview = message if len(message) <= 200 else message[:197] + "…"
+            self.latest_response.configure(text=preview)
         labels = {"user": "TÚ", "jarvis": "JARVIS", "system": "SISTEMA"}
         self.transcript.configure(state="normal")
         self.transcript.insert("end", f"{labels[role]}  {message}\n", role)
@@ -221,7 +245,14 @@ class JarvisDesktop:
         threading.Thread(target=test, daemon=True).start()
 
     def _set_status(self, text, color=CYAN):
-        self.status.set(f"LISTENING  {text}")
+        phases = {"ON": "ready", "OFF": "paused", "ERROR": "error",
+                  "PRUEBA": "test", "THINKING": "thinking", "SPEAKING": "speaking"}
+        self.phase = phases.get(text, "ready")
+        labels = {"ON": "MICRÓFONO ACTIVO", "OFF": "MICRÓFONO PAUSADO",
+                  "ERROR": "REQUIERE ATENCIÓN", "PRUEBA": "PRUEBA DE MICRÓFONO",
+                  "THINKING": "PREPARANDO RESPUESTA", "SPEAKING": "RESPONDIENDO"}
+        self.status.set(labels.get(text, text))
+        color = {"THINKING": AMBER, "SPEAKING": GREEN}.get(text, color)
         self.status_label.configure(fg=color)
 
     def start_listening(self):
@@ -279,10 +310,13 @@ class JarvisDesktop:
                 return
             if heard:
                 self.events.put(("user", heard))
+                self.events.put(("status", "THINKING"))
                 response = self.conversation.process_text(heard)
                 if response:
                     self.events.put(("jarvis", response))
-                    threading.Thread(target=self.voice.speak, args=(response,), daemon=True).start()
+                    threading.Thread(target=self._speak_response, args=(response,), daemon=True).start()
+                else:
+                    self.events.put(("status", "ON" if self.listening else "OFF"))
         self.events.put(("closed", None))
 
     def send_text(self):
@@ -291,12 +325,27 @@ class JarvisDesktop:
         self.entry.delete(0, "end")
         self._append("user", message)
         self.conversation.active = True
+        self._set_status("THINKING")
         def work():
             response = self.conversation.process_text(message)
             if response:
                 self.events.put(("jarvis", response))
-                self.voice.speak(response)
+                self._speak_response(response)
+            else:
+                self.events.put(("status", "ON" if self.listening else "OFF"))
         threading.Thread(target=work, daemon=True).start()
+
+    def _speak_response(self, response):
+        self.events.put(("status", "SPEAKING"))
+        succeeded = False
+        try:
+            succeeded = self.voice.speak(response)
+            if not succeeded:
+                self.events.put(("error", "No pude reproducir la voz. Puedes leer la respuesta en pantalla."))
+                return
+        finally:
+            if succeeded and not self.stop_event.is_set():
+                self.events.put(("status", "ON" if self.listening else "OFF"))
 
     def _poll_events(self):
         try:
