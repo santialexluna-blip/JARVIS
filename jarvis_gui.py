@@ -96,6 +96,9 @@ class JarvisDesktop:
 
         self.mic_button = self._round_button("MIC", self.toggle_listening, 12)
         self.mic_window = self.hud.create_window(0, 0, window=self.mic_button)
+        self.activate_button = self._nav_button("ACTIVAR", self.activate_conversation)
+        self.activate_button.configure(width=8)
+        self.activate_window = self.hud.create_window(0, 0, window=self.activate_button)
         self.log_button = self._nav_button("REGISTRO", self.toggle_transcript)
         self.log_window = self.hud.create_window(0, 0, window=self.log_button)
         self.voice_button = self._nav_button("VOZ", self.toggle_settings)
@@ -141,7 +144,8 @@ class JarvisDesktop:
         for item, xy in ((self.title_window, (width/2, 20)), (self.version_window, (width/2, 44)),
                          (self.status_window, (25, 54)), (self.info_window, (width-48, 70)),
                          (self.help_window, (width-48, height-128)), (self.mic_window, (width/2, height-50)),
-                         (self.log_window, (width/2-180, height-47)), (self.voice_window, (width/2+180, height-47)),
+                         (self.activate_window, (width/2-90, height-47)),
+                         (self.log_window, (width/2-210, height-47)), (self.voice_window, (width/2+180, height-47)),
                          (self.close_window, (width-100, height-47)), (self.transcript_window, (width-265, height/2)),
                          (self.settings_window, (200, height/2))):
             self.hud.coords(item, *xy)
@@ -237,6 +241,11 @@ class JarvisDesktop:
             self.worker = threading.Thread(target=self._voice_loop, daemon=True)
             self.worker.start()
 
+    def activate_conversation(self):
+        self.conversation.active = True
+        self.start_listening()
+        self._append("system", "Conversación activada. Puedes hablar sin decir Karen.")
+
     def toggle_transcript(self):
         current = self.hud.itemcget(self.transcript_window, "state")
         self.hud.itemconfigure(self.transcript_window, state="hidden" if current == "normal" else "normal")
@@ -247,7 +256,7 @@ class JarvisDesktop:
 
     def show_info(self):
         self.toggle_transcript()
-        self._append("system", "MIC activa o pausa la escucha. REGISTRO muestra la conversación. VOZ cambia el perfil.")
+        self._append("system", "ACTIVAR permite hablar sin decir Karen. MIC pausa la escucha. REGISTRO muestra la conversación. VOZ cambia el perfil.")
 
     def _voice_loop(self):
         welcome = "Sistema listo. Di Karen o aplaude para activarme."

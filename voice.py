@@ -6,11 +6,13 @@ JARVIS sigue funcionando en modo texto.
 
 import threading
 import audioop
+import re
+import unicodedata
 
 
 class VoiceEngine:
     WAKE_WORD = "karen"
-    WAKE_WORDS = ("karen", "caren", "car en")
+    WAKE_WORDS = ("karen", "caren", "car en", "karin", "carin")
 
     def __init__(self, language: str = "es-MX", preferred_voice_id: str | None = None,
                  profile: str = "spanish", microphone_index: int | None = None):
@@ -132,6 +134,10 @@ class VoiceEngine:
 
             self._recognizer = sr.Recognizer()
             self._recognizer.dynamic_energy_threshold = True
+            self._recognizer.pause_threshold = 0.45
+            self._recognizer.non_speaking_duration = 0.2
+            self._recognizer.phrase_threshold = 0.15
+            self._recognizer.operation_timeout = 8
             return True
         except Exception:
             self._recognizer = None
@@ -164,7 +170,7 @@ class VoiceEngine:
                     phrase_time_limit=phrase_time_limit,
                 )
             raw = audio.get_raw_data(convert_width=2)
-            if self._looks_like_clap(raw, 2):
+            if self._looks_like_clap(raw, 2, audio.sample_rate):
                 return "__CLAP__"
             return self._recognizer.recognize_google(audio, language=self.language).strip()
         except sr.WaitTimeoutError:
@@ -173,6 +179,8 @@ class VoiceEngine:
             return None
         except sr.RequestError as exc:
             raise RuntimeError("No pude conectar con el reconocimiento de voz.") from exc
+        except TimeoutError as exc:
+            raise RuntimeError("El reconocimiento de voz tardó demasiado. Intenta otra vez.") from exc
         except (OSError, AttributeError) as exc:
             raise RuntimeError(
                 "Windows no me dio acceso al micrófono. Activa el permiso de micrófono "
@@ -180,25 +188,39 @@ class VoiceEngine:
             ) from exc
 
     @staticmethod
-    def _looks_like_clap(raw_audio: bytes, sample_width: int = 2) -> bool:
+    def _looks_like_clap(raw_audio: bytes, sample_width: int = 2,
+                         sample_rate: int = 16000) -> bool:
         """Detecta un pico breve y fuerte, típico de un aplauso."""
         if not raw_audio:
             return False
         rms = audioop.rms(raw_audio, sample_width)
         peak = audioop.max(raw_audio, sample_width)
-        return peak >= 12000 and rms >= 900 and peak >= rms * 2.4
+        if not (peak >= 12000 and rms >= 900 and peak >= rms * 2.4):
+            return False
+        # Un aplauso es un transitorio breve. La intensidad por sí sola
+        # también clasifica palabras pronunciadas fuerte como aplausos.
+        samples = [int.from_bytes(raw_audio[i:i + sample_width], "little", signed=True)
+                   for i in range(0, len(raw_audio), sample_width)]
+        loud = [i for i, value in enumerate(samples) if abs(value) >= peak * 0.35]
+        return bool(loud) and (loud[-1] - loud[0] + 1) / sample_rate <= 0.12
 
     @staticmethod
     def strip_wake_word(text: str) -> str | None:
         normalized = text.strip()
         if not normalized:
             return None
-        lowered = normalized.lower()
+        # Conserva el texto del comando; usa otra copia solo para reconocer
+        # variantes de transcripción y saludos antes del nombre.
+        lowered = "".join(char for char in unicodedata.normalize("NFD", normalized.lower())
+                          if unicodedata.category(char) != "Mn")
+        start = re.match(r"^[\s¿?¡!.,:;]*(?:(?:hola|oye|hey)[\s,!:;]+)?", lowered).end()
+        lowered = lowered[start:]
+        normalized = normalized[start:]
         for wake_word in VoiceEngine.WAKE_WORDS:
             if lowered == wake_word:
                 return ""
             if lowered.startswith(wake_word):
                 remainder = normalized[len(wake_word):]
-                if remainder and (remainder[0].isspace() or remainder[0] in ",:;.-"):
-                    return remainder.lstrip(" ,:;.-").strip()
+                if remainder and (remainder[0].isspace() or remainder[0] in ",:;.-¿?¡!"):
+                    return remainder.lstrip(" ,:;.-¿?¡!").strip()
         return None

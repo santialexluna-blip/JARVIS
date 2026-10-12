@@ -60,9 +60,11 @@ class OllamaProvider(AIProvider):
             method="POST",
         )
         try:
-            with urlopen(request, timeout=180) as response:
+            with urlopen(request, timeout=25) as response:
                 result = json.loads(response.read().decode("utf-8"))
-        except (URLError, OSError, TimeoutError, json.JSONDecodeError) as exc:
+        except TimeoutError as exc:
+            raise RuntimeError("La IA local tardó demasiado. Intenta una pregunta más corta.") from exc
+        except (URLError, OSError, json.JSONDecodeError) as exc:
             raise RuntimeError("La IA local no está disponible.") from exc
         answer = result.get("message", {}).get("content", "").strip()
         if not answer:
@@ -97,7 +99,7 @@ class OllamaProvider(AIProvider):
                 return candidate
         return None
 
-    def ensure_available(self, wait_seconds: int = 20) -> bool:
+    def ensure_available(self, wait_seconds: int = 5) -> bool:
         if self.available():
             return True
         executable = self._find_ollama()
@@ -129,12 +131,24 @@ class HybridProvider(AIProvider):
         self.fallback = fallback or DemoProvider()
 
     def reply(self, messages):
-        try:
-            return self.local.reply(messages)
-        except RuntimeError:
+        last = messages[-1].get("content", "") if messages else ""
+        normalized = DemoProvider._normalized(last)
+        quick = normalized in {"hola", "buenos dias", "buenas tardes", "buenas noches"}
+        quick = quick or normalized.startswith(("cuanto es ", "calcula ", "resultado de "))
+        quick = quick or bool(re.fullmatch(r"[0-9+\-*/().% ]+", normalized)
+                               and re.search(r"[+\-*/%]", normalized))
+        if quick:
             basic = self.fallback.reply(messages)
             if "Todavía no conozco" not in basic:
                 return basic
+        try:
+            return self.local.reply(messages)
+        except RuntimeError as exc:
+            basic = self.fallback.reply(messages)
+            if "Todavía no conozco" not in basic:
+                return basic
+            if "tardó demasiado" in str(exc):
+                return str(exc)
             return (
                 "Mi modelo local no está disponible en este momento. "
                 "Abre JARVIS.bat con conexión a Internet para completar la instalación inicial."
