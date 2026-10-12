@@ -22,6 +22,37 @@ def test_ollama_provider_sends_conversation_to_local_api():
     assert payload["model"] == "qwen3:4b"
     assert payload["stream"] is False
     assert payload["think"] is False
+    assert mocked.call_args.kwargs["timeout"] == 25
+
+
+def test_simple_greeting_does_not_wait_for_local_model():
+    local = Mock()
+    answer = HybridProvider(local=local).reply([{"role": "user", "content": "hola"}])
+    assert "Soy Jarvis" in answer
+    local.reply.assert_not_called()
+
+
+def test_simple_calculation_does_not_wait_for_local_model():
+    local = Mock()
+    answer = HybridProvider(local=local).reply([{"role": "user", "content": "cuánto es 204 + 85 + 150"}])
+    assert "439" in answer
+    local.reply.assert_not_called()
+
+
+def test_general_conversation_still_uses_local_model():
+    local = Mock()
+    local.reply.return_value = "Vamos a hablar de tu proyecto."
+    messages = [{"role": "user", "content": "ayúdame con mi proyecto"}]
+    assert HybridProvider(local=local).reply(messages) == "Vamos a hablar de tu proyecto."
+    local.reply.assert_called_once_with(messages)
+
+
+def test_slow_model_reports_timeout_instead_of_missing_installation():
+    with patch.object(OllamaProvider, "ensure_available", return_value=True), \
+         patch("ai.urlopen", side_effect=TimeoutError):
+        answer = HybridProvider().reply([{"role": "user", "content": "explícame la física"}])
+    assert "tardó demasiado" in answer
+    assert "instalación" not in answer
 
 
 def test_hybrid_provider_uses_basic_fallback_when_local_ai_is_offline():

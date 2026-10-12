@@ -15,6 +15,10 @@ respuesta puedes decir **para**, **silencio**, **cállate** o **detente**.
 Las respuestas normales están limitadas a unas 55 palabras para reducir tanto
 el tiempo de espera como la duración de la voz.
 
+El HUD distingue espera/escucha (cian), preparación de respuesta (ámbar),
+respuesta por voz (verde) y problemas (rojo). La tarjeta central muestra una
+vista breve de la última respuesta; el texto completo se conserva en REGISTRO.
+
 Si el indicador muestra `LISTENING ERROR`, abre **VOZ** y pulsa **PROBAR
 MICRÓFONO**. La interfaz mostrará la frase detectada o indicará si Windows
 bloqueó el permiso. En Windows, el permiso se activa en **Configuración →
@@ -31,9 +35,19 @@ Abre únicamente `JARVIS.bat`. En el primer inicio prepara las dependencias y ej
 
 - Di `Karen` una vez, o aplaude, para activar la conversación.
 - Continúa hablando sin repetir el nombre.
+- Si no reconoce el nombre, pulsa **ACTIVAR** para conversar directamente.
 - Di `Karen, duerme` para volver al modo de espera.
 - Di `Karen, salir` para cerrar.
 - No requiere tokens ni claves API.
+
+La activación acepta también «Caren», «Karín» y saludos como «Hola, Karen».
+La detección de aplausos exige un pico breve para evitar confundir voz fuerte
+con un aplauso. La escucha termina tras 0.45 segundos de pausa; si separas
+mucho las palabras, la frase puede dividirse. Saludos y cálculos sencillos
+responden sin esperar al modelo. Cada solicitud de respuesta local tiene un
+timeout de 25 segundos y el arranque del servicio espera hasta 5 segundos;
+estos límites no garantizan una latencia total ni sustituyen una prueba en tu PC.
+El reconocimiento de palabras utiliza un servicio en Internet.
 
 ## Corrección v2.1.1
 - Se corrigieron los imports que impedían ejecutar el proyecto desde una instalación limpia.
